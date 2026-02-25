@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
-from ocr import extract_text
-from analyzer import analyze_health
+from .ocr import extract_text
+from .analyzer import analyze_health
 import io
 
 app = FastAPI()
