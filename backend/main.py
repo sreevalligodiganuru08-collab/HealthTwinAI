@@ -1,30 +1,37 @@
-from fastapi import FastAPI, File, UploadFile
-from .ocr import extract_text
-from .analyzer import analyze_health
-import io
+from fastapi import FastAPI, UploadFile, File
+import shutil
+import os
+
+from backend.ocr import extract_text
+from backend.analyzer import analyze_health
 
 app = FastAPI()
 
-
-@app.get("/")
-def home():
-    return {"message": "HealthTwin AI Backend Running 🚀"}
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-@app.post("/upload-report")
-async def upload_report(file: UploadFile = File(...)):
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    file_path = f"{UPLOAD_FOLDER}/{file.filename}"
     
-    # Read file
-    contents = await file.read()
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
-    # Step 1: OCR
-    text = extract_text(contents)
+    return {"message": "File uploaded successfully", "file_path": file_path}
 
-    # Step 2: Analysis
-    score, risk, explanation = analyze_health(text)
 
-    return {
-        "score": score,
-        "risk": risk,
-        "explanation": explanation
-    }
+@app.get("/analyze/")
+def analyze(file_path: str):
+    try:
+        text = extract_text(file_path)
+
+        if not text:
+            return {"error": "OCR failed to extract text"}
+
+        result = analyze_health(text)
+
+        return result
+
+    except Exception as e:
+        return {"error": str(e)}

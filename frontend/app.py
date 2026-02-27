@@ -9,16 +9,22 @@ if uploaded_file:
     st.success("File uploaded successfully!")
 
     if st.button("Analyze Report"):
-        files = {"file": uploaded_file.getvalue()}
-
         response = requests.post(
             "http://127.0.0.1:8000/upload-report",
-            files={"file": (uploaded_file.name, uploaded_file.getvalue())}
+            files={"file": uploaded_file}
         )
 
         if response.status_code == 200:
             data = response.json()
+
             st.write("### Result")
-            st.write(data)
+            st.write(f"Score: {data['score']}")
+            st.write(f"Risk: {data['risk']}")
+
+            st.write("### Wearable Data")
+            st.json(data["wearable"])
+
+            st.write("### Explanation")
+            st.text(data["explanation"])
         else:
             st.error("Error in processing")

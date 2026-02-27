@@ -1,37 +1,20 @@
-import re
+from backend.predictor import predict_risk
 
-
-def extract_value(pattern, text):
-    match = re.search(pattern, text, re.IGNORECASE)
-    return float(match.group(1)) if match else None
-
-
-def analyze_health(text):
+def analyze_health(text, wearable_data):
     
-    hemoglobin = extract_value(r"hemoglobin[:\s]*([\d.]+)", text)
-    glucose = extract_value(r"glucose[:\s]*([\d.]+)", text)
+    # Temporary fixed values (can upgrade later)
+    hemoglobin = 11.5
+    glucose = 120
 
-    # Default fallback
-    if hemoglobin is None:
-        hemoglobin = 11.5
-    if glucose is None:
-        glucose = 120
+    # Get prediction from wearable data
+    score, risk = predict_risk(wearable_data, [])
 
-    score = 100
-
-    if hemoglobin < 11:
-        score -= 20
-
-    if glucose > 130:
-        score -= 20
-
-    if score > 80:
-        risk = "Low"
-    elif score > 60:
-        risk = "Moderate"
-    else:
-        risk = "High"
-
-    explanation = f"Hemoglobin: {hemoglobin}, Glucose: {glucose}"
+    explanation = f"""
+    Hemoglobin: {hemoglobin}
+    Glucose: {glucose}
+    Heart Rate: {wearable_data['heart_rate']}
+    SpO2: {wearable_data['spo2']}
+    Sleep: {wearable_data['sleep_hours']}
+    """
 
     return score, risk, explanation
